@@ -1,8 +1,8 @@
 {
-  "name": "goit-react-hw-03-image-finder",
+  "name": "goit-react-hw-04-images",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://RomanBezuhlyi.github.io/goit-react-hw-03-image-finder/",
+  "homepage": "https://RomanBezuhlyi.github.io/goit-react-hw-04-images/",
   "dependencies": {
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
