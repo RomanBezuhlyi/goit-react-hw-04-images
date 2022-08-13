@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { Application } from 'components/App';
 import { Searchbar } from 'components/Searchbar';
@@ -11,42 +11,42 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const PER_PAGE = 12;
 
-export class App extends Component {
-  state = {
-    searchQuery: '',
-    images: [],
-    error: null,
-    page: 1,
-    totalPages: 1,
-    showLoader: false,
-  };
+export const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showLoader, setShowLoader] = useState(false);
+  const isSearchQueryUpdated = useRef(false);
+  const isLoadMoreButtonVisible = page !== totalPages && !showLoader;
 
-  async componentDidUpdate(prevProps, prevState) {
-    const isSearchQueryUpdated =
-      prevState.searchQuery !== this.state.searchQuery;
-    const isPageUpdated = prevState.page !== this.state.page;
+  useEffect(() => {
+    if (!searchQuery) {
+      return;
+    }
+    setShowLoader(true);
 
-    if (isSearchQueryUpdated || isPageUpdated) {
-      this.setState({ showLoader: true });
-      try {
-        const result = await imagesApi.fetchImagesBundle({
-          query: this.state.searchQuery,
-          page: this.state.page,
-          perPage: PER_PAGE,
-        });
+    imagesApi
+      .fetchImagesBundle({
+        query: searchQuery,
+        page: page,
+        perPage: PER_PAGE,
+      })
+      .then(result => {
         if (result.totalHits === 0) {
           toast.warning(
             'Sorry, there are no images, corresponding to your request.'
           );
           return;
         }
-        if (isSearchQueryUpdated) {
+        if (isSearchQueryUpdated.current) {
           toast.info(
             `Hooray, we have found ${result.totalHits} images for you.`
           );
-          this.setState({ totalPages: Math.ceil(result.totalHits / PER_PAGE) });
+          setTotalPages(Math.ceil(result.totalHits / PER_PAGE));
+          isSearchQueryUpdated.current = false;
         }
-        const hits = result.hits.map(element => {
+        const newImages = result.hits.map(element => {
           return {
             id: element.id,
             webformatURL: element.webformatURL,
@@ -55,48 +55,42 @@ export class App extends Component {
             largeImageURL: element.largeImageURL,
           };
         });
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-        }));
-      } catch (error) {
-        this.setState({ error: error.message });
-        toast.error(`Error occured ${this.state.error}`);
-      } finally {
-        this.setState({ showLoader: false });
-      }
-    }
-  }
+        setImages(prevImages => [...prevImages, ...newImages]);
+      })
+      .catch(({ message }) => {
+        toast.error(`Error occured ${message}`);
+      })
+      .finally(() => {
+        setShowLoader(false);
+      });
+  }, [searchQuery, page]);
 
-  setSearchQuery = query => {
-    if (this.state.searchQuery === query) {
+  const setNewSearchQuery = query => {
+    if (searchQuery === query) {
       return;
     }
-    this.setState({ searchQuery: query, images: [], page: 1, totalPages: 1 });
+    setSearchQuery(query);
+    setImages([]);
+    setPage(1);
+    setTotalPages(1);
+    isSearchQueryUpdated.current = true;
   };
 
-  loadMoreImages = () => {
-    const { page, totalPages } = this.state;
+  const loadMoreImages = () => {
     if (page < totalPages) {
-      this.setState(prevState => ({ page: prevState.page + 1 }));
+      setPage(prevPage => prevPage + 1);
     }
   };
 
-  setShowLoader = value => {
-    this.setState({ showLoader: value });
-  };
-
-  render() {
-    const { searchQuery, showLoader, images, page, totalPages } = this.state;
-    return (
-      <Application>
-        <Searchbar onSubmit={this.setSearchQuery} />
-        {searchQuery && <ImageGallery images={this.state.images} />}
-        {showLoader && <Bars color="#00BFFF" height={80} width={80} />}
-        {images.length !== 0 && page !== totalPages && (
-          <Button onClick={this.loadMoreImages} disabled={showLoader} />
-        )}
-        <ToastContainer autoClose={3000} theme="colored" />
-      </Application>
-    );
-  }
-}
+  return (
+    <Application>
+      <Searchbar onSubmit={setNewSearchQuery} />
+      {images.length !== 0 && <ImageGallery images={images} />}
+      {showLoader && <Bars color="#00BFFF" height={80} width={80} />}
+      {isLoadMoreButtonVisible && (
+        <Button onClick={loadMoreImages} disabled={showLoader} />
+      )}
+      <ToastContainer autoClose={3000} theme="colored" />
+    </Application>
+  );
+};
