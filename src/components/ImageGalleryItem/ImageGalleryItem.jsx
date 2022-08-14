@@ -4,7 +4,7 @@ import { Modal } from 'components/Modal';
 import { GalleryItem, GalleryItemImage } from './ImageGalleryItem.styled';
 
 export const ImageGalleryItem = ({ imageUrl, largeImageUrl, tags, author }) => {
-  const { showModal, setShowModal } = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const toggleModal = () => {
     setShowModal(show => !show);

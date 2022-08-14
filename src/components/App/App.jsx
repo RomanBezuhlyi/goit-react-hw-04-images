@@ -65,7 +65,7 @@ export const App = () => {
       });
   }, [searchQuery, page]);
 
-  const setNewSearchQuery = query => {
+  const changeSearchQuery = query => {
     if (searchQuery === query) {
       return;
     }
@@ -84,7 +84,7 @@ export const App = () => {
 
   return (
     <Application>
-      <Searchbar onSubmit={setNewSearchQuery} />
+      <Searchbar onSubmit={changeSearchQuery} />
       {images.length !== 0 && <ImageGallery images={images} />}
       {showLoader && <Bars color="#00BFFF" height={80} width={80} />}
       {isLoadMoreButtonVisible && (
@@ -94,3 +94,5 @@ export const App = () => {
     </Application>
   );
 };
+
+<Bars color="#00BFFF" height={80} width={80} />;

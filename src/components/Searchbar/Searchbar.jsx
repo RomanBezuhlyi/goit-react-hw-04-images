@@ -10,10 +10,10 @@ import {
 } from './Searchbar.styled';
 
 export const Searchbar = ({ onSubmit }) => {
-  const { query, setQuery } = useState('');
+  const [query, setQuery] = useState('');
 
   const handleQueryChange = event => {
-    setQuery(event.Target.value.toLowerCase());
+    setQuery(event.target.value.toLowerCase());
   };
 
   const handleSubmit = event => {
